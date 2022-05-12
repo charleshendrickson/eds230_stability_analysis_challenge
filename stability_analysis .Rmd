@@ -1,0 +1,54 @@
+---
+title: "stability_analysis"
+author: "Charles Hendrickson"
+date: "5/12/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(sensitivity)
+library(tidyverse)
+library(deSolve)
+```
+
+Example of exploring stability with our proportional harvest model
+
+```{r}
+source("dharvest.R")
+dharvest
+# first lets look at how the derivative varies with the size of forest
+
+carbon = seq(from=0, to=1000)
+dcarbon= unlist(carbon %>% map(dharvest_fixed,Time=NULL, parms=list(r=0.05, K=1000, mincarbon=0, harv=10)))
+
+ggplot(as.data.frame(carbon,dcarbon), aes(carbon, dcarbon))+geom_point()+geom_hline(yintercept = 0, col="red")+
+  labs(y="Derivative\n (Rate of change of forest carbon) (kg/C/year)", x="Current Forest Carbon Stock (kgC)")
+
+```
+
+
+```{r}
+# try it out with different initial conditions to watch how the system moves to a stable state
+tm = seq(from=1, to=500)
+Pinitial = 500
+gps = list(harv=10, K=1000, r=0.05, mincarbon=0)
+
+res = ode(Pinitial,tm, dharvest_fixed, gps)
+colnames(res)=c("time","carbon")
+
+ggplot(as.data.frame(res), aes(time, carbon))+geom_point()+
+   labs(y="Forest Biomass (kgC)", x="Year", title="Fixed Harvest of 10kg/year\n Starting conditions 500kgC")
+```
+
+
+
+
+
+
+
+
+
